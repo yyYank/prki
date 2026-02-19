@@ -64,7 +64,7 @@ func runSplit(cmd *cobra.Command, args []string) error {
 		totalLines += f.TotalLines()
 	}
 
-	fmt.Println("\n🌳 Analyzing PR tree...\n")
+	fmt.Print("\n🌳 Analyzing PR tree...\n\n")
 	fmt.Printf("Current changes: %d files, %d lines\n\n", len(files), totalLines)
 	fmt.Println("Split proposal:")
 	for i, g := range groups {
