@@ -40,8 +40,7 @@ $ prki split
 
 次のステップ:
 1. 子PR (#101-103) をレビュー依頼
-2. 承認されたら親ブランチにマージ: prki merge
-3. 全て完了したら親PRをmainにマージ
+2. 全て完了したら親PRをmainにマージ
 ```
 
 ## Features
@@ -89,9 +88,6 @@ $ prki split --strategy semantic
 
 # 子PRの状態確認
 $ prki status
-
-# 子PRマージ後、親ブランチを更新
-$ prki merge
 ```
 
 ### Case 2: ローカルの大きいコミットを分割
@@ -167,22 +163,6 @@ $ prki status
 
 次のアクション:
 - PR #102 の修正対応
-- PR #101, #103 承認後: prki merge
-```
-
-### `prki merge`
-
-承認された子PRを親ブランチにマージ
-
-```bash
-# 全ての承認済み子PRをマージ
-$ prki merge
-
-# 特定の子PRだけマージ
-$ prki merge --pr 101,103
-
-# マージ後の親PR差分確認
-$ prki diff
 ```
 
 ## Workflow
@@ -205,14 +185,10 @@ $ prki split
 # 4. レビュー依頼（小さいので早い）
 # → レビュアーがそれぞれレビュー
 
-# 5. 承認された子PRをマージ
-$ prki merge
-# → 親ブランチに統合
-
-# 6. 親PRをレビュー（差分は統合部分のみ）
+# 5. 親PRをレビュー（差分は統合部分のみ）
 # → 最終確認
 
-# 7. 親PRをmainにマージ
+# 6. 親PRをmainにマージ
 # → 完了！
 ```
 
@@ -310,11 +286,6 @@ $ prki split --auto
 
 # 子PRレビュー
 # ...レビュアーが各PRをレビュー...
-
-# マージ
-$ prki merge
-✓ 全ての子PRがマージされました
-✓ 親PRの差分を確認してください: git diff main
 ```
 
 ### Example 2: 途中で大きくなった場合

@@ -111,7 +111,7 @@ func runSplit(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Println("\nNext steps:")
 	fmt.Println("  1. Request reviews on each child PR")
-	fmt.Println("  2. After approval: prki merge")
+	fmt.Println("  2. After all approvals, merge parent PR into main")
 	return nil
 }
 
