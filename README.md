@@ -70,16 +70,7 @@ $ prki split
 ## Installation
 
 ```bash
-# Homebrew (予定)
-brew install prki
-
-# pip
-pip install prki
-
-# From source
-git clone https://github.com/yourusername/prki.git
-cd prki
-pip install -e .
+go install github.com/yyYank/prki@latest
 ```
 
 ## Quick Start
