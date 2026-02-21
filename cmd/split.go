@@ -234,15 +234,14 @@ func getCurrentBranch() (string, error) {
 
 func toBranchName(groupName string) string {
 	lower := strings.ToLower(groupName)
-	words := strings.Fields(lower)
-	last := words[len(words)-1]
-	last = strings.Map(func(r rune) rune {
+	sanitized := strings.Map(func(r rune) rune {
 		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-' {
 			return r
 		}
 		return '-'
-	}, last)
-	return "review/" + last
+	}, lower)
+	parts := strings.FieldsFunc(sanitized, func(r rune) bool { return r == '-' })
+	return "review/" + strings.Join(parts, "-")
 }
 
 func init() {

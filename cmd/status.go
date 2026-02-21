@@ -89,7 +89,7 @@ func fetchChildPRs(branch string) ([]ChildPR, error) {
 		"--json", "number,title,reviewDecision",
 	).Output()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("gh pr list failed: %w", err)
 	}
 	var prs []ChildPR
 	if err := json.Unmarshal(out, &prs); err != nil {
