@@ -111,7 +111,7 @@ func runSplit(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Println("\nNext steps:")
 	fmt.Println("  1. Request reviews on each child PR")
-	fmt.Println("  2. After approval: prki merge")
+	fmt.Println("  2. After all approvals, merge parent PR into main")
 	return nil
 }
 
@@ -234,15 +234,14 @@ func getCurrentBranch() (string, error) {
 
 func toBranchName(groupName string) string {
 	lower := strings.ToLower(groupName)
-	words := strings.Fields(lower)
-	last := words[len(words)-1]
-	last = strings.Map(func(r rune) rune {
+	sanitized := strings.Map(func(r rune) rune {
 		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-' {
 			return r
 		}
 		return '-'
-	}, last)
-	return "review/" + last
+	}, lower)
+	parts := strings.FieldsFunc(sanitized, func(r rune) bool { return r == '-' })
+	return "review/" + strings.Join(parts, "-")
 }
 
 func init() {

@@ -10,9 +10,9 @@ func TestToBranchName(t *testing.T) {
 		input string
 		want  string
 	}{
-		{"Core Business Logic", "review/logic"},
-		{"UI & Components", "review/components"},
-		{"Infrastructure & Config", "review/config"},
+		{"Core Business Logic", "review/core-business-logic"},
+		{"UI & Components", "review/ui-components"},
+		{"Infrastructure & Config", "review/infrastructure-config"},
 		{"Tests", "review/tests"},
 		{"Documentation", "review/documentation"},
 		{"Single", "review/single"},
@@ -83,5 +83,44 @@ func TestBuildPRBody_EmptyFiles(t *testing.T) {
 	body := buildPRBody("main", g)
 	if !strings.Contains(body, "Documentation") {
 		t.Error("buildPRBody() should contain group name even with no files")
+	}
+}
+
+func TestBuildPRBody_DeletionOnly(t *testing.T) {
+	g := FileGroup{
+		Name:  "Tests",
+		Files: []FileChange{{Path: "cmd/merge.go", LinesAdded: 0, LinesDeleted: 38}},
+	}
+	body := buildPRBody("feature/cleanup", g)
+	if !strings.Contains(body, "+0") {
+		t.Errorf("buildPRBody() should contain +0 for deletion-only file, body:\n%s", body)
+	}
+	if !strings.Contains(body, "-38") {
+		t.Errorf("buildPRBody() should contain -38, body:\n%s", body)
+	}
+}
+
+func TestToBranchName_EdgeCases(t *testing.T) {
+	tests := []struct {
+		input string
+		want  string
+	}{
+		// 連続する特殊文字はまとめて1つの区切りになる
+		{"A && B", "review/a-b"},
+		// 数字はそのまま使われる
+		{"Feature 123", "review/feature-123"},
+		// ハイフンはそのまま通る
+		{"pre-existing", "review/pre-existing"},
+		// 先頭・末尾の特殊文字は除去される
+		{"  Spaces  ", "review/spaces"},
+		// 空文字列はprefixだけになる
+		{"", "review/"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			if got := toBranchName(tt.input); got != tt.want {
+				t.Errorf("toBranchName(%q) = %q, want %q", tt.input, got, tt.want)
+			}
+		})
 	}
 }

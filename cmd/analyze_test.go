@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"regexp"
 	"testing"
 )
 
@@ -373,5 +374,115 @@ func TestGroupFiles_Strategy(t *testing.T) {
 		if len(groups) == 0 {
 			t.Errorf("strategy=%q: expected non-empty groups", strategy)
 		}
+	}
+}
+
+func TestGroupBySemantic_Order(t *testing.T) {
+	files := []FileChange{
+		{Path: "README.md"},           // Documentation (order 5)
+		{Path: "cmd/foo_test.go"},     // Tests (order 4)
+		{Path: "src/App.tsx"},         // UI & Components (order 3)
+		{Path: "src/service.go"},      // Core Business Logic (order 2)
+		{Path: "go.mod"},              // Infrastructure & Config (order 1)
+	}
+	groups := groupBySemantic(files)
+
+	expectedOrder := []string{
+		"Infrastructure & Config",
+		"Core Business Logic",
+		"UI & Components",
+		"Tests",
+		"Documentation",
+	}
+	if len(groups) != len(expectedOrder) {
+		t.Fatalf("expected %d groups, got %d", len(expectedOrder), len(groups))
+	}
+	for i, want := range expectedOrder {
+		if groups[i].Name != want {
+			t.Errorf("groups[%d].Name = %q, want %q", i, groups[i].Name, want)
+		}
+	}
+}
+
+func TestGroupBySemantic_EmptyInput(t *testing.T) {
+	groups := groupBySemantic([]FileChange{})
+	if len(groups) != 0 {
+		t.Errorf("expected 0 groups for empty input, got %d", len(groups))
+	}
+}
+
+func TestGroupByDirectory_RootFile(t *testing.T) {
+	files := []FileChange{
+		{Path: "main.go"},       // filepath.Dir → "."
+		{Path: "cmd/split.go"},
+	}
+	groups := groupByDirectory(files)
+
+	byName := map[string]FileGroup{}
+	for _, g := range groups {
+		byName[g.Name] = g
+	}
+
+	if len(byName["."].Files) != 1 {
+		t.Errorf("root dir \".\": got %d files, want 1", len(byName["."].Files))
+	}
+	if len(byName["cmd"].Files) != 1 {
+		t.Errorf("cmd: got %d files, want 1", len(byName["cmd"].Files))
+	}
+}
+
+func TestMatchAny(t *testing.T) {
+	tests := []struct {
+		name     string
+		path     string
+		patterns []*regexp.Regexp
+		want     bool
+	}{
+		{
+			"empty pattern list never matches",
+			"src/main.go",
+			[]*regexp.Regexp{},
+			false,
+		},
+		{
+			"single matching pattern",
+			"main.go",
+			[]*regexp.Regexp{regexp.MustCompile(`\.go$`)},
+			true,
+		},
+		{
+			"single non-matching pattern",
+			"main.go",
+			[]*regexp.Regexp{regexp.MustCompile(`\.ts$`)},
+			false,
+		},
+		{
+			"matches second pattern",
+			"src/App.tsx",
+			[]*regexp.Regexp{regexp.MustCompile(`\.go$`), regexp.MustCompile(`\.tsx$`)},
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := matchAny(tt.path, tt.patterns); got != tt.want {
+				t.Errorf("matchAny(%q) = %v, want %v", tt.path, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCalculateComplexity_MultipleFiles(t *testing.T) {
+	files := []FileChange{
+		{Path: "main.go", LinesAdded: 100, LinesDeleted: 0},  // base=10, mult=0.8 → 8
+		{Path: "app.ts", LinesAdded: 100, LinesDeleted: 0},   // base=10, mult=1.2 → 12
+	}
+	calculateComplexity(files)
+
+	if files[0].Complexity != 8 {
+		t.Errorf("files[0].Complexity = %d, want 8", files[0].Complexity)
+	}
+	if files[1].Complexity != 12 {
+		t.Errorf("files[1].Complexity = %d, want 12", files[1].Complexity)
 	}
 }
